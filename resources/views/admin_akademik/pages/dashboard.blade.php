@@ -11,6 +11,9 @@
         $students = $students ?? collect();
         $assignments = $assignments ?? collect();
         $currentYear = $activeYear ?? $years->firstWhere('is_active', true);
+
+        $totalClasses = method_exists($classes, 'total') ? $classes->total() : $classes->count();
+        $totalSubjects = method_exists($subjects, 'total') ? $subjects->total() : $subjects->count();
     @endphp
 
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
@@ -42,7 +45,7 @@
         <div class="col-12 col-sm-6 col-xl-3">
             <x-stat-card
                 label="Total Kelas"
-                :value="$classes->count()"
+                :value="$totalClasses"
                 :meta="$students->count() . ' akun siswa terdaftar'"
                 :href="route('admin.dashboard', ['page' => 'data-master'])"
             />
@@ -50,7 +53,7 @@
         <div class="col-12 col-sm-6 col-xl-3">
             <x-stat-card
                 label="Total Mata Pelajaran"
-                :value="$subjects->count()"
+                :value="$totalSubjects"
                 :meta="$teachers->count() . ' akun guru mapel'"
                 :href="route('admin.dashboard', ['page' => 'data-master'])"
             />

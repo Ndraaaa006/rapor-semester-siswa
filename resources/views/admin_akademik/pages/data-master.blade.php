@@ -6,6 +6,8 @@
     @php
         $classes = $classrooms ?? collect();
         $subjects = $subjects ?? collect();
+        $totalClasses = method_exists($classes, 'total') ? $classes->total() : $classes->count();
+        $totalSubjects = method_exists($subjects, 'total') ? $subjects->total() : $subjects->count();
     @endphp
 
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
@@ -38,7 +40,7 @@
         <div class="col-6 col-lg-3">
             <div class="rd-card p-4 h-100 d-flex flex-column justify-content-between">
                 <div class="fw-semibold small text-dark mb-2">Total Kelas</div>
-                <div class="fs-2 fw-bold lh-1 text-success">{{ $classes->count() }}</div>
+                <div class="fs-2 fw-bold lh-1 text-success">{{ $totalClasses }}</div>
                 <div class="text-muted small mt-2">Rombongan belajar aktif</div>
             </div>
         </div>
@@ -46,7 +48,7 @@
         <div class="col-6 col-lg-3">
             <div class="rd-card p-4 h-100 d-flex flex-column justify-content-between">
                 <div class="fw-semibold small text-dark mb-2">Total Mapel</div>
-                <div class="fs-2 fw-bold lh-1 text-dark">{{ $subjects->count() }}</div>
+                <div class="fs-2 fw-bold lh-1 text-dark">{{ $totalSubjects }}</div>
                 <div class="text-muted small mt-2">Mata pelajaran terdaftar</div>
             </div>
         </div>
@@ -55,14 +57,14 @@
     <div class="row g-4">
         {{-- Kolom Kiri: Data Kelas --}}
         <div class="col-12 col-lg-6">
-            <div class="rd-card p-4 h-100">
+            <div class="rd-card p-4 h-100 d-flex flex-column">
                 <div class="d-flex align-items-center justify-content-between mb-3">
                     <div>
                         <h2 class="h6 fw-bold mb-1">Data Kelas</h2>
                         <p class="text-muted small mb-0">Tambah kelas dan tingkat rombongan belajar.</p>
                     </div>
                     <span class="badge rounded-pill text-bg-success-subtle text-success border border-success-subtle px-3 py-2">
-                        {{ $classes->count() }} Kelas
+                        {{ $totalClasses }} Kelas
                     </span>
                 </div>
 
@@ -130,19 +132,30 @@
                         </tbody>
                     </table>
                 </div>
+
+                @if (method_exists($classes, 'hasPages') && $classes->hasPages())
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pt-3 mt-auto border-top">
+                        <small class="text-muted">
+                            Menampilkan {{ $classes->firstItem() ?? 0 }}–{{ $classes->lastItem() ?? 0 }} dari {{ $classes->total() }} kelas
+                        </small>
+                        <div>
+                            {{ $classes->appends(request()->query())->links('pagination::bootstrap-5') }}
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
 
         {{-- Kolom Kanan: Data Mata Pelajaran --}}
         <div class="col-12 col-lg-6">
-            <div class="rd-card p-4 h-100">
+            <div class="rd-card p-4 h-100 d-flex flex-column">
                 <div class="d-flex align-items-center justify-content-between mb-3">
                     <div>
                         <h2 class="h6 fw-bold mb-1">Data Mata Pelajaran</h2>
                         <p class="text-muted small mb-0">Tambah kode dan nama mata pelajaran.</p>
                     </div>
                     <span class="badge rounded-pill text-bg-success-subtle text-success border border-success-subtle px-3 py-2">
-                        {{ $subjects->count() }} Mapel
+                        {{ $totalSubjects }} Mapel
                     </span>
                 </div>
 
@@ -210,6 +223,17 @@
                         </tbody>
                     </table>
                 </div>
+
+                @if (method_exists($subjects, 'hasPages') && $subjects->hasPages())
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pt-3 mt-auto border-top">
+                        <small class="text-muted">
+                            Menampilkan {{ $subjects->firstItem() ?? 0 }}–{{ $subjects->lastItem() ?? 0 }} dari {{ $subjects->total() }} mapel
+                        </small>
+                        <div>
+                            {{ $subjects->appends(request()->query())->links('pagination::bootstrap-5') }}
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
     </div>
