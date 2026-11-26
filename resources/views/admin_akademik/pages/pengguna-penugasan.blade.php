@@ -5,8 +5,8 @@
 @section('content')
     @php
         $years = $academicYears ?? collect();
-        $classes = $classrooms ?? collect();
-        $subjects = $subjects ?? collect();
+        $classes = $allClassrooms ?? ($classrooms ?? collect());
+        $subjects = $allSubjects ?? ($subjects ?? collect());
         $teachers = $teachers ?? collect();
         $students = $students ?? collect();
         $assignments = $assignments ?? collect();

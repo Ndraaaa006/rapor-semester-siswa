@@ -32,12 +32,17 @@ class AdminDashboardController extends Controller
             ->get();
 
         $activeYear = $academicYears->firstWhere('is_active', true);
+
+        $allClassrooms = Classroom::query()->orderBy('name')->get();
+        $allSubjects = Subject::query()->orderBy('name')->get();
+
         $classrooms = Classroom::query()
             ->orderBy('name')
             ->paginate(5, ['*'], 'kelas_page');
         $subjects = Subject::query()
             ->orderBy('name')
             ->paginate(5, ['*'], 'mapel_page');
+
         $teachers = User::query()->where('role', 'guru_mapel')->orderBy('name')->get();
         $students = User::query()
             ->with('classroom')
@@ -64,6 +69,8 @@ class AdminDashboardController extends Controller
             'activeYear' => $activeYear,
             'classrooms' => $classrooms,
             'subjects' => $subjects,
+            'allClassrooms' => $allClassrooms,
+            'allSubjects' => $allSubjects,
             'teachers' => $teachers,
             'students' => $students,
             'assignments' => $assignments,
@@ -257,3 +264,4 @@ class AdminDashboardController extends Controller
             ->with('success', 'Penugasan mengajar berhasil dihapus.');
     }
 }
+
