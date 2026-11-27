@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Controller;
 use App\Models\AcademicYear;
 use App\Models\Classroom;
 use App\Models\Grade;
@@ -15,34 +16,18 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
-class AdminDashboardController extends Controller
+class PenggunaPenugasanController extends Controller
 {
-    public function index(Request $request): View
+    public function index(): View
     {
-        $allowedPages = ['dashboard', 'tahun-ajaran', 'data-master', 'pengguna-penugasan'];
-        $activePage = $request->query('page', 'dashboard');
-
-        if (! in_array($activePage, $allowedPages, true)) {
-            $activePage = 'dashboard';
-        }
-
         $academicYears = AcademicYear::query()
             ->orderByDesc('is_active')
             ->orderByDesc('id')
             ->get();
 
         $activeYear = $academicYears->firstWhere('is_active', true);
-
         $allClassrooms = Classroom::query()->orderBy('name')->get();
         $allSubjects = Subject::query()->orderBy('name')->get();
-
-        $classrooms = Classroom::query()
-            ->orderBy('name')
-            ->paginate(5, ['*'], 'kelas_page');
-        $subjects = Subject::query()
-            ->orderBy('name')
-            ->paginate(5, ['*'], 'mapel_page');
-
         $teachers = User::query()->where('role', 'guru_mapel')->orderBy('name')->get();
         $students = User::query()
             ->with('classroom')
@@ -55,103 +40,19 @@ class AdminDashboardController extends Controller
             ->orderByDesc('id')
             ->get();
 
-        $viewMap = [
-            'dashboard' => 'admin_akademik.pages.dashboard',
-            'tahun-ajaran' => 'admin_akademik.pages.tahun-ajaran',
-            'data-master' => 'admin_akademik.pages.data-master',
-            'pengguna-penugasan' => 'admin_akademik.pages.pengguna-penugasan',
-        ];
-
-        return view($viewMap[$activePage], [
-            'activePage' => $activePage,
-            'activeSection' => $activePage,
+        return view('admin_akademik.pages.pengguna-penugasan', [
+            'activePage' => 'pengguna-penugasan',
+            'activeSection' => 'pengguna-penugasan',
             'academicYears' => $academicYears,
             'activeYear' => $activeYear,
-            'classrooms' => $classrooms,
-            'subjects' => $subjects,
             'allClassrooms' => $allClassrooms,
             'allSubjects' => $allSubjects,
+            'classrooms' => $allClassrooms,
+            'subjects' => $allSubjects,
             'teachers' => $teachers,
             'students' => $students,
             'assignments' => $assignments,
         ]);
-    }
-
-    public function storeAcademicYear(Request $request): RedirectResponse
-    {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:30'],
-            'semester' => ['required', Rule::in(['Ganjil', 'Genap'])],
-            'is_active' => ['nullable', 'boolean'],
-            'is_published' => ['nullable', 'boolean'],
-        ]);
-
-        $isActive = $request->boolean('is_active');
-        $isPublished = $request->boolean('is_published');
-
-        DB::transaction(function () use ($validated, $isActive, $isPublished): void {
-            if ($isActive) {
-                AcademicYear::query()->update(['is_active' => false]);
-            }
-
-            AcademicYear::create([
-                'name' => trim($validated['name']),
-                'semester' => $validated['semester'],
-                'is_active' => $isActive,
-                'is_published' => $isPublished,
-            ]);
-        });
-
-        return redirect()
-            ->route('admin.dashboard', ['page' => 'tahun-ajaran'])
-            ->with('success', 'Data tahun ajaran berhasil disimpan.');
-    }
-
-    public function togglePublish(AcademicYear $academicYear): RedirectResponse
-    {
-        $academicYear->update([
-            'is_published' => ! $academicYear->is_published,
-        ]);
-
-        $statusText = $academicYear->is_published ? 'dibuka/dipublikasikan' : 'dikunci';
-
-        return redirect()
-            ->route('admin.dashboard', ['page' => 'tahun-ajaran'])
-            ->with('success', "Publikasi rapor periode {$academicYear->name} berhasil {$statusText}.");
-    }
-
-    public function storeClassroom(Request $request): RedirectResponse
-    {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:60', 'unique:classrooms,name'],
-            'level' => ['required', 'string', 'max:20'],
-        ]);
-
-        Classroom::create([
-            'name' => trim($validated['name']),
-            'level' => trim($validated['level']),
-        ]);
-
-        return redirect()
-            ->route('admin.dashboard', ['page' => 'data-master'])
-            ->with('success', 'Data kelas berhasil ditambahkan.');
-    }
-
-    public function storeSubject(Request $request): RedirectResponse
-    {
-        $validated = $request->validate([
-            'code' => ['required', 'string', 'max:20', 'unique:subjects,code'],
-            'name' => ['required', 'string', 'max:100'],
-        ]);
-
-        Subject::create([
-            'code' => strtoupper(trim($validated['code'])),
-            'name' => trim($validated['name']),
-        ]);
-
-        return redirect()
-            ->route('admin.dashboard', ['page' => 'data-master'])
-            ->with('success', 'Data mata pelajaran berhasil ditambahkan.');
     }
 
     public function storeUser(Request $request): RedirectResponse
@@ -264,4 +165,3 @@ class AdminDashboardController extends Controller
             ->with('success', 'Penugasan mengajar berhasil dihapus.');
     }
 }
-
